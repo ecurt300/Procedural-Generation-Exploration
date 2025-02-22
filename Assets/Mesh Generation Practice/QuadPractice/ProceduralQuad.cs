@@ -3,6 +3,10 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using Unity.Mathematics;
 using static Unity.Mathematics.math;
+
+/// <summary>
+/// This is a tutorial code that I am following all rights go to him https://catlikecoding.com/unity/tutorials/procedural-meshes/creating-a-mesh/ I am just practicing
+/// </summary>
 [RequireComponent(typeof(MeshFilter),typeof(MeshRenderer))]
 public class ProceduralQuad : MonoBehaviour
 {
