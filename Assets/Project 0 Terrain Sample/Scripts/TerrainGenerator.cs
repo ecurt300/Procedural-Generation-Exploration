@@ -1,5 +1,7 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UIElements;
 [RequireComponent(typeof(MeshRenderer),typeof(MeshFilter))]
 public class TerrainGenerator : MonoBehaviour
 {
@@ -7,52 +9,70 @@ public class TerrainGenerator : MonoBehaviour
     [SerializeField] private int height;
     [SerializeField] private int width;
     [SerializeField] private int cellSize = 1;
+    [SerializeField] float cellSizeX;
+    [SerializeField] float cellSizeY;
     [SerializeField] TerrainData TerrainData;
-
-
+    [SerializeField] Texture2D terrainTest;
+    Vector3[] vertices;
+    int[] Indices;
+    Vector3[] normals;
+    Vector2[] uv;
     private void GenerateTerrain()
     {
         
         Texture2D heightTexture = TerrainData.GenerateHeightmapTexture();
-        width = heightTexture.width;
-        height = heightTexture.height;
-        var vertices = new Vector3[(height + 1) * (width + 1)];
-        var Indices = new int[height * width * 6];
-        var normals = new Vector3[(height + 1) * (width + 1)];
-        var uv = new Vector2[(height + 1) * (width + 1)];
+        
+        vertices = new Vector3[(height + 1) * (width + 1)];
+        Indices = new int[height * width * 6];
+        normals = new Vector3[(height + 1) * (width + 1)];
+        uv = new Vector2[(height + 1) * (width + 1)];
+        cellSizeX = cellSize / width;
+        cellSizeY = cellSize / height;
 
-        for (int x = 0, v = 0; x <= height; x++)
+        for (int x = 0; x < width; x++)
         {
-            for (int y = 0; y <= width; y++, v++)
+            for (int y = 0; y < height; y++)
             {
                 int index = y * (width + 1) + x;
-                var coordX = x * cellSize % heightTexture.width;
-                var coordY = y * cellSize % heightTexture.height;
-                var heightMap = heightTexture.GetPixelBilinear(uv[index].x, uv[index].y).r * 2000;
 
+               
 
-                vertices[index] = new Vector3((x * width * 2 ) * cellSize, 0, (y * height * 2 ) * cellSize);
-                vertices[index].y += heightMap;
+                var vertX = ( x * cellSizeX - (width / 2));
+                var vertY =  ( y * cellSizeY - (height / 2));
+                vertices[index] = new Vector3((vertX), 0, (vertY));
+                
 
-                normals[v] = Vector3.back;
-                uv[v] = new Vector2( (float)x/1000,(float)y/1000);
+                normals[index] = Vector3.back;
+                uv[index] = new Vector2( (float)vertX/width,(float)vertY/height);
+                
 
             }
         }
-
-        for (int x = 0, v = 0; x < height; x++)
+        int tris = 0;
+        for (int x = 0; x < height; x++)
         {
-            for (int y = 0; y < width; y++, v+=6)
+            for (int y = 0; y < width; y++)
             {
                 int index = y * (width + 1) + x;
-                Indices[v + 0] = index;
-                Indices[v + 1] = index + width + 1;
-                Indices[v + 2] = index + 1;
+                Indices[tris + 0] = index;
+                Indices[tris + 1] = index + width + 1;
+                Indices[tris + 2] = index + 1;
 
-                Indices[v + 3] = index + 1;
-                Indices[v + 4] = index + width + 1;
-                Indices[v + 5] = index + width + 2;
-
+                Indices[tris + 3] = index + 1;
+                Indices[tris + 4] = index + width + 1;
+                Indices[tris + 5] = index + width + 2;
+                tris += 6;
+            }
+        }
+        for(int x= 0; x <= width; x++)
+        {
+            for(int y = 0;y <= height;y++)
+            {
+                int index = y * (width + 1) + x;
+                var uvs = uv[index];
+                var color = heightTexture.GetPixelBilinear(uvs.x, uvs.y);
+                var heightMap = ( color.r)* TerrainData.HeightMultiplier;
+                vertices[index].y = heightMap - (heightMap/2);
             }
         }
         var mesh = new Mesh()
@@ -67,8 +87,8 @@ public class TerrainGenerator : MonoBehaviour
         };
        
         GetComponent<MeshFilter>().mesh = mesh;
-        GetComponent<Renderer>().material.mainTexture = heightTexture;
-        GetComponent<Renderer>().material.mainTextureScale = new Vector2(4, 4);
+        GetComponent<Renderer>().material.mainTexture = terrainTest;
+   
     }
     /*
      private void Start()
@@ -143,11 +163,10 @@ public class TerrainGenerator : MonoBehaviour
 
     private void Update()
     {
-        if(regenerate)
-        {
-            regenerate = false;
+       
+   
             GenerateTerrain();
-        }
+        
     }
 }
 

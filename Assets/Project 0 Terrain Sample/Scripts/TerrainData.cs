@@ -4,88 +4,61 @@ using System.Collections.Generic;
 using Unity.Burst.CompilerServices;
 using UnityEngine.UIElements;
 [System.Serializable]
-public class TerrainProfile
+public class TerrainData : MonoBehaviour
 {
-    public int width;
-    public int height;
-    public float RiverThreshold;
-    public float LakeThreshold;
-    public float lakePower;
-    public float riverStrength;
-    public float riverPower;
-    public float lakeSize;
-}
+    Texture2D heightMap;
 
-[System.Serializable]
-public class TerrainData
-{
-  
-    public Texture2D heightMap;
-    public Texture2D lastHeightMap;
-    public Texture2D colorMap;
-    public NoiseProfile profile;
-    public TerrainProfile terrainProfile;
-
-    public float GenerateHeight()
+    [SerializeField] private float width;
+    [SerializeField] private float height;
+    [SerializeField] private int octaves;
+    [SerializeField] private float scale;
+    [SerializeField] private float persistance;
+    [SerializeField] private float lacunarity;
+    [SerializeField] private float offsetX;
+    [SerializeField] private float offsetY;
+    [SerializeField] private float octave1, octave2,octave3,octave4;
+    [SerializeField] private float heightMultiplier;
+    [SerializeField] private float moistureAmount;
+    public float HeightMultiplier
     {
-        float maxValue = 0;
-        float total = 0;
-        for (int i = 0; i < terrainProfile.width; i++)
-        {
-            for (int j = 0; j < terrainProfile.height; j++)
-            {
-                float xCoord = i / terrainProfile.width * profile.scale;
-                float yCoord = j / terrainProfile.height * profile.scale;
-
-                float noise = TerrainUtils.PerlinNoise(i, j, profile);
-                float riverNoise = TerrainUtils.RiverNoise(terrainProfile.RiverThreshold, (int)xCoord, (int)yCoord, terrainProfile.riverPower, terrainProfile.riverStrength, profile);
-                float lakeNoise = TerrainUtils.LakeNoise(terrainProfile.LakeThreshold, terrainProfile.lakePower, (int)terrainProfile.lakeSize, terrainProfile.lakePower, (int)xCoord, (int)yCoord, profile);
-                noise *= riverNoise;
-
-                total += noise;
-                maxValue += profile.amplitude;
-
-
-
-
-            }
-        }
-        return total / maxValue;
+        get { return heightMultiplier; }
     }
-    
-
-
-public Texture2D GenerateHeightmapTexture()
-    {
-       heightMap = new Texture2D(200,200);
-       
-
-        for (int i = 0; i < terrainProfile.height; i++)
+    public Texture2D GenerateHeightmapTexture()
         {
-            for (int j = 0; j < terrainProfile.width; j++)
+         
+
+
+            for (int i = 0; i < 200; i++)
             {
-                float xCoord = (float)i / profile.width * profile.scale;
-                float yCoord = (float)j / profile.height * profile.scale;
-                float sample = TerrainUtils.WarpedNoise(xCoord,yCoord,profile.scale,terrainProfile.riverStrength,profile);
-                float riverMask = TerrainUtils.RiverNoise(terrainProfile.RiverThreshold,xCoord,yCoord,terrainProfile.riverPower,terrainProfile.riverStrength,profile);
-                float height = sample;
-                if(height < terrainProfile.RiverThreshold)
+                for (int j = 0; j < 200; j++)
                 {
-                    height *= riverMask * 0.5f;
+
+                    float height = TerrainUtils.LayeredPerlinNoise(offsetX,moistureAmount,offsetY,octaves,octave1,octave2,octave3,octave4,i,j,200,200,scale);
+                  
+
+               
+                    float sample = height;
+                   
+                    Color color = new Color(sample,sample,sample);
+                        
+                    heightMap.SetPixel(i, j, color);
+
                 }
-                Color color = new Color(height, height, height);
-
-                heightMap.SetPixel(i, j, color);
-
             }
+
+            heightMap.filterMode = FilterMode.Point;
+            heightMap.Apply();
+            return heightMap;
+
         }
-        
-        heightMap.filterMode = FilterMode.Point;
-        heightMap.Apply();
-        return heightMap;
-        
+    private void Start()
+    {
+       heightMap = new Texture2D(200, 200);
     }
-        
-   
-   
+    private void Update()
+    {
+    }
+
 }
+
+    

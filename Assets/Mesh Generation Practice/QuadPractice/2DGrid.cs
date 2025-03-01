@@ -7,19 +7,20 @@ public class ProcGrid : MonoBehaviour
     [SerializeField] private int width;
     [SerializeField] private int cellSize = 1;
     Vector3[] vertices;
-    private void Start()
+    float step = 0;
+    private void Update()
     {
         vertices = new Vector3[(height + 1) * (width + 1)];
         var Indices = new int[height * width * 6];
         var normals = new Vector3[(height + 1) * (width + 1)];
         var uv = new Vector2[(height + 1) * (width + 1)];
-
+        step = (width * height)/cellSize;
         for (int i = 0, v = 0; i <= width; i++)
         {
             for (int j = 0; j <= height; j++, v++)
             {
                 int index = (j * (width + 1) + i);
-                vertices[index] = new Vector3((i * cellSize), (j * cellSize), 0);
+                vertices[index] = new Vector3((i * step), (j * step), 0);
          
                 normals[v] = Vector3.back;
 
@@ -34,17 +35,18 @@ public class ProcGrid : MonoBehaviour
                 int index = j * (width + 1) + i;
 
 
+                if (i < width && j < height)
+                {
 
+                    Indices[v + 0] = index;
+                    Indices[v + 1] = index + width + 1;
+                    Indices[v + 2] = index + 1;
 
-                Indices[v + 0] = index;
-                Indices[v + 1] = index + width + 1;
-                Indices[v + 2] = index + 1;
-                
-                Indices[v + 3] = index+1;
-                Indices[v + 4] = index  + width + 1;
-                Indices[v + 5] = index + width + 2;
-           
-              
+                    Indices[v + 3] = index + 1;
+                    Indices[v + 4] = index + width + 1;
+                    Indices[v + 5] = index + width + 2;
+
+                }
             }
         }
        
