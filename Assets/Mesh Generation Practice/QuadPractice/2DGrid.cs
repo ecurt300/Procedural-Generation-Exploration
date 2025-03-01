@@ -54,7 +54,7 @@ public class ProcGrid : MonoBehaviour
 
             vertices = vertices,
             triangles = Indices,
-                normals = normals,
+            normals = normals,
             uv = uv,
 
             name = "ProcGrid"

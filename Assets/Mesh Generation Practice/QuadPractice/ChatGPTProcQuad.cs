@@ -1,3 +1,4 @@
+using System.Threading;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,7 +14,7 @@ public class ProceduralGrid : MonoBehaviour
     private Mesh mesh;
     private Vector3[] vertices;
     private int[] triangles;
-
+    
     void Start()
     {
         GenerateMesh();
@@ -41,7 +42,7 @@ public class ProceduralGrid : MonoBehaviour
             for (int x = 0; x <= width; x++)
             {
                 int index = y * (width + 1) + x;
-                vertices[index] = new Vector3(x * cellSizeX, 0, y * cellSizeY);
+                vertices[index] = new Vector3( x * cellSizeX, 0, y * cellSizeY);
             }
         }
 
