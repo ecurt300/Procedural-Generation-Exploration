@@ -14,7 +14,7 @@ public class ProceduralGrid : MonoBehaviour
     private Mesh mesh;
     private Vector3[] vertices;
     private int[] triangles;
-    
+    public int MeshSimplification;
     void Start()
     {
         GenerateMesh();
@@ -42,15 +42,15 @@ public class ProceduralGrid : MonoBehaviour
             for (int x = 0; x <= width; x++)
             {
                 int index = y * (width + 1) + x;
-                vertices[index] = new Vector3( x * cellSizeX, 0, y * cellSizeY);
+                vertices[index] = new Vector3( (x  - width/2) * cellSizeX, 0, (y -height/2) * cellSizeY);
             }
         }
 
-        // Generate triangles
+        // Generate Indices
         int tris = 0;
-        for (int y = 0; y < height; y++)
+        for (int y = 0; y < height; y ++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < width; x ++)
             {
                 int vertIndex = y * (width + 1) + x;
 

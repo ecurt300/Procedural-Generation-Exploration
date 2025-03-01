@@ -4,61 +4,56 @@ using System.Collections.Generic;
 using Unity.Burst.CompilerServices;
 using UnityEngine.UIElements;
 [System.Serializable]
-public class TerrainData : MonoBehaviour
+public class TerrainData
 {
     Texture2D heightMap;
 
-    [SerializeField] private float width;
-    [SerializeField] private float height;
+    public int width = 200;
+    public int height = 200;
     [SerializeField] private int octaves;
     [SerializeField] private float scale;
-    [SerializeField] private float persistance;
-    [SerializeField] private float lacunarity;
-    [SerializeField] private float offsetX;
-    [SerializeField] private float offsetY;
-    [SerializeField] private float octave1, octave2,octave3,octave4;
     [SerializeField] private float heightMultiplier;
     [SerializeField] private float moistureAmount;
     public float HeightMultiplier
     {
         get { return heightMultiplier; }
     }
-    public Texture2D GenerateHeightmapTexture()
-        {
-         
 
+    public Texture2D HeightMap { get => heightMap; set => heightMap = value; }
 
-            for (int i = 0; i < 200; i++)
-            {
-                for (int j = 0; j < 200; j++)
-                {
-
-                    float height = TerrainUtils.LayeredPerlinNoise(offsetX,moistureAmount,offsetY,octaves,octave1,octave2,octave3,octave4,i,j,200,200,scale);
-                  
-
-               
-                    float sample = height;
-                   
-                    Color color = new Color(sample,sample,sample);
-                        
-                    heightMap.SetPixel(i, j, color);
-
-                }
-            }
-
-            heightMap.filterMode = FilterMode.Point;
-            heightMap.Apply();
-            return heightMap;
-
-        }
-    private void Start()
+    public void Initialize()
     {
-       heightMap = new Texture2D(200, 200);
+        HeightMap = new Texture2D(width, height);
     }
-    private void Update()
+    public Texture2D GenerateHeightmapTexture(int x, int y)
     {
+
+
+
+
+
+        float Xcoord = (float)x / 200 * scale;
+        float Ycoord = (float)y / 200 * scale;
+        float sample = Mathf.PerlinNoise(Xcoord, Ycoord);
+
+
+
+
+        Color color = new Color(sample, sample, sample);
+
+        HeightMap.SetPixel((int)Xcoord, (int)Ycoord, color);
+
+
+
+        HeightMap.filterMode = FilterMode.Point;
+        HeightMap.Apply();
+        return HeightMap;
+
     }
+
+
 
 }
+
 
     

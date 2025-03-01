@@ -1,172 +1,155 @@
 using System;
 using Unity.VisualScripting;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.UIElements;
 [RequireComponent(typeof(MeshRenderer),typeof(MeshFilter))]
 public class TerrainGenerator : MonoBehaviour
 {
-    [SerializeField] private bool regenerate;
+    [SerializeField] private int octaves;
+    [SerializeField] private float scale;
+    [Range(1f, 4f)]
+    [SerializeField] private int LOD = 1;
     [SerializeField] private int height;
     [SerializeField] private int width;
-    [SerializeField] private int cellSize = 1;
-    [SerializeField] float cellSizeX;
-    [SerializeField] float cellSizeY;
+    [SerializeField] private int meshSimplicationIncrement = 1;
+    
     [SerializeField] TerrainData TerrainData;
     [SerializeField] Texture2D terrainTest;
-    Vector3[] vertices;
-    int[] Indices;
-    Vector3[] normals;
-    Vector2[] uv;
+    private MeshData meshData;
+    [SerializeField] int vertexPerLine;
+    private void InitMesh()
+    {
+        meshSimplicationIncrement = LOD;
+        vertexPerLine = (width-1)/ meshSimplicationIncrement + 1;
+        meshData = new MeshData(vertexPerLine, vertexPerLine);
+    }
+
+    void GenerateTerrainMesh()
+    {
+        float[,] noiseMap = TerrainUtils.NoiseMap(width, height, scale,octaves);
+       
+        for (int x = 0,i = 0; x < width; x += meshSimplicationIncrement)
+        {
+            for (int y = 0; y < height; y += meshSimplicationIncrement,i++)
+            {
+                
+                int  index = i;
+                meshData.Vertices[index] = new Vector3(x - width / 2, 0, y - height / 2);
+                meshData.Normals[index] = Vector3.back;
+                var sample =  noiseMap[x, y];
+                Color terrainColor = new Color(sample, sample, sample);
+               
+                meshData.Uvs[index] = new Vector2(((float)x )/ width, (((float)y )/ height)) ;
+                meshData.Vertices[index].y = sample;
+                if (x < width - 1 && y < height - 1)
+                {
+                    meshData.AddTriangle( index, index +vertexPerLine + 1, index + vertexPerLine);
+                    meshData.AddTriangle( index + vertexPerLine + 1, index, index +1);
+                }
+               // terrainTest.SetPixel(x, y, terrainColor);
+
+            }
+         
+        }
+        
+    }
+
     private void GenerateTerrain()
     {
-        
-        Texture2D heightTexture = TerrainData.GenerateHeightmapTexture();
-        
-        vertices = new Vector3[(height + 1) * (width + 1)];
-        Indices = new int[height * width * 6];
-        normals = new Vector3[(height + 1) * (width + 1)];
-        uv = new Vector2[(height + 1) * (width + 1)];
-        cellSizeX = cellSize / width;
-        cellSizeY = cellSize / height;
 
-        for (int x = 0; x < width; x++)
-        {
-            for (int y = 0; y < height; y++)
+
+        /*
+         private void Start()
+         {
+             Texture2D heightTexture = TerrainData.GenerateHeightmapTexture();
+            var totalVertices = ((height  + 1) * (width  + 1));
+            Debug.Log(totalVertices);
+           vertices = new Vector3[totalVertices];
+           Indices = new int[totalVertices * 6];
+          var  normals = new Vector3[totalVertices];
+          var  uv = new Vector2[(totalVertices)];
+           var cellSizeX = cellSize / width;
+           var cellSizeY = cellSize / height;
+
+            for (int x = 0; x <= height; x++)
             {
-                int index = y * (width + 1) + x;
+                for (int y = 0; y <= width ; y++)
+                {
+                    int index = y * (width) + x;
 
-               
 
-                var vertX = ( x * cellSizeX - (width / 2));
-                var vertY =  ( y * cellSizeY - (height / 2));
-                vertices[index] = new Vector3((vertX), 0, (vertY));
-                
 
-                normals[index] = Vector3.back;
-                uv[index] = new Vector2( (float)vertX/width,(float)vertY/height);
-                
+                    var vertX =  x - (width / 2);
+                    var vertY =   y - (height / 2);
+                    vertices[index] = new Vector3((vertX * cellSizeX ), 0, (vertY * cellSizeY));
 
+
+                    normals[index] = Vector3.back;
+                    uv[index] = new Vector2( (float)vertX/width,(float)vertY/height);
+
+
+                }
             }
-        }
-        int tris = 0;
-        for (int x = 0; x < height; x++)
-        {
-            for (int y = 0; y < width; y++)
+            int tris = 0;
+            for (int x = 0; x < height ; x += 2)
             {
-                int index = y * (width + 1) + x;
-                Indices[tris + 0] = index;
-                Indices[tris + 1] = index + width + 1;
-                Indices[tris + 2] = index + 1;
+                for (int y = 0; y < width; y+= 2)
+                {
+                    int index = y * (width) + x;
+                    Indices[tris + 0] = index ;
+                    Indices[tris + 1] = index + width + 1;
+                    Indices[tris + 2] = index  + 1;
 
-                Indices[tris + 3] = index + 1;
-                Indices[tris + 4] = index + width + 1;
-                Indices[tris + 5] = index + width + 2;
-                tris += 6;
+                    Indices[tris + 3] = index + 1;
+                    Indices[tris + 4] = index + width + 1;
+                    Indices[tris + 5] = index + width + 2;
+                    tris += 6;
+                }
             }
-        }
-        for(int x= 0; x <= width; x++)
-        {
-            for(int y = 0;y <= height;y++)
+            for(int x= 0; x < width; x++)
             {
-                int index = y * (width + 1) + x;
-                var uvs = uv[index];
-                var color = heightTexture.GetPixelBilinear(uvs.x, uvs.y);
-                var heightMap = ( color.r)* TerrainData.HeightMultiplier;
-                vertices[index].y = heightMap - (heightMap/2);
+                for(int y = 0;y < height;y++)
+                {
+                    int index = y * (width + 1) + x;
+                    var uvs = uv[index];
+                    var color = heightTexture.GetPixelBilinear(uvs.x, uvs.y);
+                    var heightMap = ( color.r)* TerrainData.HeightMultiplier;
+                    vertices[index].y = heightMap;
+                }
             }
+            var mesh = new Mesh()
+            {
+
+                vertices = vertices,
+                triangles = Indices,
+                normals = normals,
+                uv = uv,
+
+                name = "TerrainSample"
+            };
+
+            GetComponent<MeshFilter>().mesh = mesh;
+            GetComponent<Renderer>().material.mainTexture = heightTexture;
+
         }
-        var mesh = new Mesh()
-        {
-
-            vertices = vertices,
-            triangles = Indices,
-            normals = normals,
-            uv = uv,
-
-            name = "TerrainSample"
-        };
-       
-        GetComponent<MeshFilter>().mesh = mesh;
-        GetComponent<Renderer>().material.mainTexture = terrainTest;
-   
+     }
+        */
     }
-    /*
-     private void Start()
-     {
-         vertices = new Vector3[(heightMap + 1) * (width + 1)];
-         var Indices = new int[heightMap * width * 6];
-         var normals = new Vector3[(heightMap + 1) * (width + 1)];
-         var uv = new Vector2[(heightMap + 1) * (width + 1)];
 
-         for (int i = 0, v = 0; i <= width; i++)
-         {
-             for (int j = 0; j <= heightMap; j++, v++)
-             {
-                 int index = (j * (width + 1) + i);
-                 vertices[index] = new Vector3((i * cellSize), (j * cellSize), 0);
-
-                 normals[v] = Vector3.back;
-
-                 uv[v] = new Vector2(i - 1, j - 1);
-
-             }
-         }
-         for (int i = 0, v = 0; i < width; i++)
-         {
-             for (int j = 0; j < heightMap; j++, v += 6)
-             {
-                 int index = j * (width + 1) + i;
-
-
-
-
-                 Indices[v + 0] = index;
-                 Indices[v + 1] = index + width + 1;
-                 Indices[v + 2] = index + 1;
-
-                 Indices[v + 3] = index + 1;
-                 Indices[v + 4] = index + width + 1;
-                 Indices[v + 5] = index + width + 2;
-
-
-             }
-         }
-
-         Debug.Log(Indices);
-         var mesh = new Mesh()
-         {
-
-             vertices = vertices,
-             triangles = Indices,
-             normals = normals,
-             uv = uv,
-
-             name = "ProcGrid"
-         };
-         GetComponent<MeshFilter>().mesh = mesh;
-     }
-     private void OnDrawGizmos()
-     {
-         vertices = new Vector3[(heightMap + 1) * (width + 1)];
-         for (int i = 0, v = 0; i < heightMap - 1; i++)
-         {
-             for (int j = 0; j < width - 1; j++, v++)
-             {
-                 vertices[v] = new Vector3(i, j);
-                 Gizmos.DrawSphere(vertices[v], 0.05f);
-
-             }
-         }
-     }
- }
-    */
-
+    private void Start()
+    {
+        TerrainData.Initialize();
+        terrainTest = new Texture2D(width, height);
+    }
     private void Update()
     {
-       
-   
-            GenerateTerrain();
-        
+
+
+        InitMesh();
+        GenerateTerrainMesh();
+        GetComponent<MeshFilter>().mesh = meshData.GenerateMesh();
+        GetComponent<Renderer>().material.mainTexture = terrainTest;
     }
 }
 
