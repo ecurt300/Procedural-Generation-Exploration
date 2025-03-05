@@ -5,8 +5,6 @@ A learning project for eventually procedurally generating a galaxy using the Uni
 >## The Projects That Will Be Made
 >### The following will be made:
 > * Terrain Sample
-> * Terrain Chunk
-> * Chunked Terrain
 > * Planet
 > * Solar System
 > * Procedural Generated Galaxy
@@ -18,8 +16,7 @@ A learning project for eventually procedurally generating a galaxy using the Uni
 > * Shaders
 > * Post Processing
 > * Getting used to meshes and level generation
-> * Burst Compiler
-> * DOTS (Needed for the Galaxy)
+> * OctTrees
 
 
 
@@ -35,25 +32,6 @@ A learning project for eventually procedurally generating a galaxy using the Uni
 
 
 > Terrain is generated from a height mapped mesh that also effects the where the tree objects are placed.  Shaders just give it some flare.
-
-
- # Project 1 Terrain Chunk
-
-> After creating the terrain sample I will be utilizing the ECS in DOTS.
-> The  Chunk is an entity that can be turned off and on. It is a rebuilt Terrain Sample but only it is an actual Entity. The following Features:
-
->* Terrain Collision Detection
->* Rebuilt for ECS and DOTS
-
-# Project 2 Chunked Procedural Terrain
-
->This a terrain chunk but it is an Infinite Height Mapped Terrain that spawns new chunks as well as saves old chunks. The player moves around the map.
-
->Features:
->* Infinite Terrain
->* Generated on the fly
->* Ocean shaders
->* Compute Shader for terrain physics such as erosion and ocean
 
 
  # Project 3 Planetary Terrain
